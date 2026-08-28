@@ -25,3 +25,12 @@ Este projeto demonstra a infraestrutura e comunicação manual entre containers 
 ├── package.json         # Dependências (Express, MySQL2)
 ├── index.js             # Código da aplicação Express e queries SQL (com JOIN)
 └── README.md            # Documentação completa de execução
+
+---
+
+# Como Rodar
+    ./scripts/setup.sh
+    apagar a rede, containers e volume apos execução para executar novamente
+    docker rm -f node-app mysql-db
+    docker volume rm volume-mysql
+    docker network rm rede-devops

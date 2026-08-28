@@ -1,53 +1,80 @@
-const express = require('express');
-const mysql = require('mysql2/promise');
+const express = require("express");
+const mysql = require("mysql2/promise");
 
 const app = express();
-const PORT = 3000;
 
-// Configuração da conexão usando o hostname 'mysql-db' (Nome do container)
+const PORT = process.env.PORT || 3000;
+
 const dbConfig = {
-  host: process.env.DB_HOST || 'mysql-db',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || 'rootpassword',
-  database: process.env.DB_NAME || 'devops_db'
+    host: process.env.DB_HOST || "mysql-db",
+    port: process.env.DB_PORT || 3306,
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASSWORD || "fodase123",
+    database: process.env.DB_NAME || "loja"
 };
 
-async function getDBConnection() {
-  return await mysql.createConnection(dbConfig);
+let connection;
+
+async function conectarBanco() {
+    try {
+        connection = await mysql.createConnection(dbConfig);
+
+        console.log("Conectado ao MySQL com sucesso!");
+    } catch (error) {
+        console.error("Erro ao conectar ao MySQL:", error.message);
+
+        setTimeout(conectarBanco, 3000);
+    }
 }
 
-app.get('/categorias', async (req, res) => {
-  try {
-    const connection = await getDBConnection();
-    const [rows] = await connection.execute('SELECT * FROM categorias');
-    await connection.end();
-    res.json(rows);
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao buscar categorias', details: error.message });
-  }
+app.get("/", (req, res) => {
+    res.json({
+        mensagem: "API Node + MySQL funcionando!"
+    });
 });
 
-app.get('/produtos', async (req, res) => {
-  try {
-    const connection = await getDBConnection();
-    const query = `
-      SELECT 
-        p.id, 
-        p.nome, 
-        p.preco, 
-        p.quantidade_estoque, 
-        c.nome AS categoria
-      FROM produtos p
-      INNER JOIN categorias c ON p.categoria_id = c.id
-    `;
-    const [rows] = await connection.execute(query);
-    await connection.end();
-    res.json(rows);
-  } catch (error) {
-    res.status(500).json({ error: 'Erro ao buscar produtos', details: error.message });
-  }
+app.get("/categorias", async (req, res) => {
+    try {
+        const [categorias] = await connection.query(
+            "SELECT * FROM categorias"
+        );
+
+        res.json(categorias);
+    } catch (error) {
+        console.error("Erro ao buscar categorias:", error.message);
+
+        res.status(500).json({
+            erro: "Erro ao buscar categorias"
+        });
+    }
+});
+
+app.get("/produtos", async (req, res) => {
+    try {
+        const [produtos] = await connection.query(`
+            SELECT
+                produtos.id,
+                produtos.nome,
+                produtos.preco,
+                produtos.quantidade_estoque,
+                categorias.nome AS categoria
+            FROM produtos
+            INNER JOIN categorias
+                ON produtos.categoria_id = categorias.id
+        `);
+
+        res.json(produtos);
+    } catch (error) {
+        console.error("Erro ao buscar produtos:", error.message);
+
+        res.status(500).json({
+            erro: "Erro ao buscar produtos"
+        });
+    }
 });
 
 app.listen(PORT, () => {
-  console.log(`Aplicação rodando na porta ${PORT}`);
+    console.log(`Servidor rodando na porta ${PORT}`);
 });
+
+conectarBanco();

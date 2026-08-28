@@ -6,7 +6,20 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "mysql2": "^3.9.7"
-  }
+    "express": "^4.22.2",
+    "mysql2": "^3.24.2"
+  },
+  "description": "Este projeto demonstra a infraestrutura e comunicação manual entre containers Docker distintos em uma rede privada isolada, sem o uso de Docker Compose ou a flag legacy '--link'.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TeixeiraRossi/devops-conectando-containers.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/TeixeiraRossi/devops-conectando-containers/issues"
+  },
+  "homepage": "https://github.com/TeixeiraRossi/devops-conectando-containers#readme"
 }

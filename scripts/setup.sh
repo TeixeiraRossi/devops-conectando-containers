@@ -1,50 +1,50 @@
 #!/bin/bash
 
-#docker rm -f mysql-db node-app 2>/dev/null
-#docker network rm devops-net 2>/dev/null
-#docker volume rm mysql_data 2>/dev/null
+set -e
 
-echo "Criando rede personalizada..."
-docker network create devops-net
+echo "Criando rede Docker"
 
-echo "Criando volume de dados..."
-docker volume create --driver local \
-  --opt type=tmpfs \
-  --opt device=tmpfs \
-  --opt o=size=1g mysql_data
+docker network create rede-devops
 
+echo "Criando container MySQL"
 
-echo "Iniciando container MySQL..."
-docker run -d \
-  --name mysql-db \
-  --network devops-net \
-  --memory="128m" \
-  --cpus="0.2" \
-  -v mysql_data:/var/lib/mysql \
-  -e MYSQL_ROOT_PASSWORD=rootpassword \
-  -e MYSQL_DATABASE=devops_db \
-  mysql:latest
+MSYS_NO_PATHCONV=1 docker run \
+    --name mysql-db \
+    --network rede-devops \
+    --cpus="0.2" \
+    --memory="128m" \
+    --memory-swap="512m" \
+    --storage-opt size=1G \
+    -e MYSQL_ROOT_PASSWORD=fodase123 \
+    -e MYSQL_DATABASE=loja \
+    -v volume-mysql:/var/lib/mysql \
+    -v "$(pwd)/database/init.sql:/docker-entrypoint-initdb.d/init.sql" \
+    -d \
+    mysql:latest
 
+echo "Construindo imagem Node"
 
-echo "Aguardando o banco de dados inicializar..."
-sleep 20
-
-
-echo "Importando estrutura e registros do banco..."
-docker exec -i mysql-db mysql -uroot -prootpassword devops_db < database/init.sql
-
-
-echo "Construindo imagem da aplicação Node..."
 docker build -t node-app .
 
+echo "Criando container Node"
 
-echo "Iniciando container Node..."
-docker run -d \
-  --name node-app \
-  --network devops-net \
-  --memory="128m" \
-  --cpus="0.2" \
-  -p 3000:3000 \
-  node-app
+docker run \
+    --name node-app \
+    --network rede-devops \
+    --cpus="0.2" \
+    --memory="128m" \
+    --memory-swap="512m" \
+    --storage-opt size=1G \
+    -e DB_HOST=mysql-db \
+    -e DB_PORT=3306 \
+    -e DB_USER=root \
+    -e DB_PASSWORD=fodase123 \
+    -e DB_NAME=loja \
+    -p 3000:3000 \
+    -d \
+    node-app
 
-echo "Ambiente configurado e rodando"
+echo "Ambiente iniciado"
+echo "Aplicação: http://localhost:3000"
+echo "Categorias: http://localhost:3000/categorias"
+echo "Produtos: http://localhost:3000/produtos"

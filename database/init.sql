@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS devops_db;
-USE devops_db;
+CREATE DATABASE IF NOT EXISTS loja;
+USE loja;
 
 DROP TABLE IF EXISTS produtos;
 DROP TABLE IF EXISTS categorias;
@@ -17,8 +17,11 @@ CREATE TABLE produtos (
     nome VARCHAR(100) NOT NULL,
     preco DECIMAL(10, 2) NOT NULL,
     quantidade_estoque INT NOT NULL,
-    categoria_id INT,
-    FOREIGN KEY (categoria_id) REFERENCES categorias(id) ON DELETE CASCADE
+    categoria_id INT NOT NULL,
+
+    CONSTRAINT fk_produtos_categoria
+        FOREIGN KEY (categoria_id)
+        REFERENCES categorias(id)
 );
 
 INSERT INTO categorias (nome, descricao, ativo) VALUES

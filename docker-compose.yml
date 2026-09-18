@@ -1,0 +1,36 @@
+services:
+
+  mysql:
+    image: mysql:latest
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: fodase123
+      MYSQL_DATABASE: loja
+    ports:
+      - "3306:3306"
+    volumes:
+      - volume-mysql:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    mem_limit: 128m
+    memswap_limit: 512m
+    cpus: 0.2
+
+  node:
+    build: .
+    container_name: node-app
+    depends_on:
+      - mysql
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: fodase123
+      DB_NAME: loja
+    ports:
+      - "3000:3000"
+    mem_limit: 128m
+    memswap_limit: 512m
+    cpus: 0.2
+
+volumes:
+  volume-mysql:

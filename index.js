@@ -6,7 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const dbConfig = {
-    host: process.env.DB_HOST || "mysql-db",
+    host: process.env.DB_HOST || "mysql",
     port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER || "root",
     password: process.env.DB_PASSWORD || "fodase123",
@@ -14,15 +14,16 @@ const dbConfig = {
 };
 
 let connection;
+let lastError = "Aguardando primeira tentativa de conexão...";
 
 async function conectarBanco() {
     try {
         connection = await mysql.createConnection(dbConfig);
-
+        lastError = null;
         console.log("Conectado ao MySQL com sucesso!");
     } catch (error) {
+        lastError = error.message;
         console.error("Erro ao conectar ao MySQL:", error.message);
-
         setTimeout(conectarBanco, 3000);
     }
 }
@@ -34,6 +35,13 @@ app.get("/", (req, res) => {
 });
 
 app.get("/categorias", async (req, res) => {
+    if (!connection) {
+        return res.status(503).json({ 
+            erro: "Banco de dados inicializando. Tente novamente em instantes.",
+            motivo: lastError
+        });
+    }
+    
     try {
         const [categorias] = await connection.query(
             "SELECT * FROM categorias"
@@ -44,12 +52,20 @@ app.get("/categorias", async (req, res) => {
         console.error("Erro ao buscar categorias:", error.message);
 
         res.status(500).json({
-            erro: "Erro ao buscar categorias"
+            erro: "Erro ao buscar categorias",
+            detalhe: error.message
         });
     }
 });
 
 app.get("/produtos", async (req, res) => {
+    if (!connection) {
+        return res.status(503).json({ 
+            erro: "Banco de dados inicializando. Tente novamente em instantes.",
+            motivo: lastError 
+        });
+    }
+
     try {
         const [produtos] = await connection.query(`
             SELECT
@@ -68,7 +84,8 @@ app.get("/produtos", async (req, res) => {
         console.error("Erro ao buscar produtos:", error.message);
 
         res.status(500).json({
-            erro: "Erro ao buscar produtos"
+            erro: "Erro ao buscar produtos",
+            detalhe: error.message
         });
     }
 });
